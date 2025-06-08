@@ -1,6 +1,10 @@
 const { default: makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
+const express = require('express');
+const PhoneNumber = require('awesome-phonenumber');
 
-export default async function handler(req, res) {
+const app = express();
+
+app.get('/generate-session', async (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -11,12 +15,19 @@ export default async function handler(req, res) {
         return res.end();
     }
 
-    const { state, saveCreds } = await useMultiFileAuthState('auth_info');
+    // Validate phone number
+    const pn = new PhoneNumber(phoneNumber);
+    if (!pn.isValid() || !pn.isMobile()) {
+        res.write(`data: ${JSON.stringify({ error: 'Invalid phone number. Use country code (e.g., +1234567890).' })}\n\n`);
+        return res.end();
+    }
+
+    const { state, saveCreds } = await useMultiFileAuthState('session'); // Use session directory
     const sock = makeWASocket({ auth: state });
 
     try {
-        // Request pairing code (triggers WhatsApp notification)
-        const pairingCode = await sock.requestPairingCode(phoneNumber.replace('+', '')); // Remove + for Baileys
+        // Request pairing code (triggers immediate WhatsApp notification)
+        const pairingCode = await sock.requestPairingCode(pn.getNumber('significant')); // e.g., 1234567890
         res.write(`data: ${JSON.stringify({ pairingCode, message: 'Enter this code in your WhatsApp app.' })}\n\n`);
     } catch (err) {
         res.write(`data: ${JSON.stringify({ error: 'Failed to generate pairing code.' })}\n\n`);
@@ -28,11 +39,11 @@ export default async function handler(req, res) {
 
         if (connection === 'open') {
             try {
-                // Get session credentials (state.creds)
+                // Get session credentials
                 const sessionId = JSON.stringify(state.creds, null, 2);
 
                 // Send session ID to user's WhatsApp DM
-                const userJid = `${phoneNumber.replace('+', '')}@s.whatsapp.net`;
+                const userJid = `${pn.getNumber('significant')}@s.whatsapp.net`;
                 await sock.sendMessage(userJid, { text: `Your Session ID:\n\`\`\`\n${sessionId}\n\`\`\`` });
 
                 // Send connection success message
@@ -58,4 +69,6 @@ export default async function handler(req, res) {
     req.on('close', () => {
         sock.end();
     });
-            }
+});
+
+module.exports = app
