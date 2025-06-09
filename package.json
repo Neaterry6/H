@@ -1,14 +1,9 @@
 {
   "name": "Rias-Gremory",
   "version": "1.0.0",
-  "description": "A sleek WhatsApp session ID generator with pairing code support - Rias Edition",
-  "author": "broken",
-  "license": "MIT",
-  "main": "index.js",
-  "type": "commonjs",
-  "directories": {
-    "session": "session"
-  },
+  "description": "WhatsApp session ID generator - Rias Edition",
+  "author": "Toxxic",
+  "license": "heisbroken",
   "scripts": {
     "start": "node index.js",
     "dev": "vercel dev"
