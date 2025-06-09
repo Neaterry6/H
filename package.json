@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "WhatsApp session ID generator - Rias Edition",
   "author": "Toxxic",
-  "license": "heisbroken",
+  "license": "MIT",
   "scripts": {
     "start": "node index.js",
     "dev": "vercel dev"
@@ -16,4 +16,3 @@
   "devDependencies": {
     "vercel": "^37.4.2"
   }
-}
