@@ -1,9 +1,0 @@
-{
-  "name": "whatsapp-session-gen",
-  "version": "1.0.0",
-  "scripts": {
-    "start": "node index.js"
-  },
-  "dependencies": {
-    "@whiskeysockets/baileys": "^6.7.18",
-  }
