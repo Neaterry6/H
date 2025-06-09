@@ -6,18 +6,19 @@
       "use": "@vercel/node"
     },
     {
-      "src": "public/**",
+      "src": "public/index.html",
       "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "src": "/api/generate-session",
+      "dest": "/api/generate-session.js",
+      "methods": ["GET"]
     },
     {
       "src": "/(.*)",
-      "dest": "/public/$1"
+      "dest": "/public/index.html"
     }
   ]
 }
