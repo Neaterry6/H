@@ -48,7 +48,7 @@
     <!-- Loading Screen -->
     <div id="loading-screen">
         <img src="https://files.catbox.moe/d15q3r.png" alt="Rias Gremory Logo" class="w-40 h-40 mb-4 animate-pulse">
-        <p class="text-white text-xl font-bold">Rias Gremory Session Generator Loading...</p>
+        <p class="text-white text-xl font-bold">Session Generator Loading...</p>
     </div>
 
     <!-- Main Content -->
@@ -57,7 +57,7 @@
         <div id="welcome-message" class="text-center mb-6">
             <h1 class="text-3xl font-bold text-rose-700 mb-2">Rias Gremory Session Generator</h1>
             <p class="text-gray-800 mb-4">
-                Generate a WhatsApp session ID with Rias Gremory's charm:
+                Generate a WhatsApp session ID :
             </p>
             <ul class="text-left text-gray-800 mb-4 list-disc list-inside">
                 <li>Enter your phone number with country code (e.g., +1234567890).</li>
@@ -120,35 +120,39 @@
             statusEl.textContent = 'Generating pairing code...';
             pairingCodeContainer.innerHTML = '';
 
-            const source = new EventSource(`/api/generate-session?phoneNumber=${encodeURIComponent(phoneNumber)}`);
-            source.onmessage = function (event) {
-                const data = JSON.parse(event.data);
-                if (data.pairingCode) {
-                    pairingCodeContainer.innerHTML = `
-                        <div class="flex items-center justify-center gap-2">
-                            <span>Pairing Code: <strong>${data.pairingCode}</strong></span>
-                            <button id="copy-button" 
-                                    class="bg-rose-500 text-white px-3 py-1 rounded hover:bg-rose-600 transition"
-                                    onclick="navigator.clipboard.writeText('${data.pairingCode}').then(() => 
-                                        document.getElementById('status').textContent = 'Code copied! Check WhatsApp.')">
-                                Copy
-                            </button>
-                        </div>`;
-                    statusEl.textContent = 'Check WhatsApp for a notification, then enter the code.';
-                } else if (data.message) {
-                    statusEl.textContent = data.message;
-                    pairingCodeContainer.innerHTML = '';
+            try {
+                const source = new EventSource(`/api/generate-session?phoneNumber=${encodeURIComponent(phoneNumber)}`);
+                source.onmessage = function (event) {
+                    const data = JSON.parse(event.data);
+                    if (data.pairingCode) {
+                        pairingCodeContainer.innerHTML = `
+                            <div class="flex items-center justify-center gap-2">
+                                <span>Pairing Code: <strong>${data.pairingCode}</strong></span>
+                                <button id="copy-button" 
+                                        class="bg-rose-500 text-white px-3 py-1 rounded hover:bg-rose-600 transition"
+                                        onclick="navigator.clipboard.writeText('${data.pairingCode}').then(() => 
+                                            document.getElementById('status').textContent = 'Code copied! Check WhatsApp.')">
+                                    Copy
+                                </button>
+                            </div>`;
+                        statusEl.textContent = 'Check WhatsApp for a notification, then enter the code.';
+                    } else if (data.message) {
+                        statusEl.textContent = data.message;
+                        pairingCodeContainer.innerHTML = '';
+                        source.close();
+                    } else if (data.error) {
+                        statusEl.textContent = data.error;
+                        pairingCodeContainer.innerHTML = '';
+                        source.close();
+                    }
+                };
+                source.onerror = function () {
+                    statusEl.textContent = 'Error connecting to server. Please try again.';
                     source.close();
-                } else if (data.error) {
-                    statusEl.textContent = data.error;
-                    pairingCodeContainer.innerHTML = '';
-                    source.close();
-                }
-            };
-            source.onerror = function () {
-                statusEl.textContent = 'Error connecting to server.';
-                source.close();
-            };
+                };
+            } catch (err) {
+                statusEl.textContent = 'Failed to initiate connection. Please try again.';
+            }
         });
     </script>
 </body>
